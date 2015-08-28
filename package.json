@@ -1,0 +1,15 @@
+{
+  "id": "photography.davidgray.app-aurora",
+  "name": "app-aurora",
+  "version": "0.0.1",
+  "description": "Ninja Sphere - App for aurora hunters!",
+  "main": "app-aurora",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "David Gray <grayda@solidinc.org>",
+  "license": "MIT",
+  "topics": {},
+  "maxMemory": 10,
+  "files": ["app-aurora"]
+}
