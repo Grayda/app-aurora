@@ -35,7 +35,7 @@ func (a *App) Start(cfg *RuntimeConfig) error {
 	pane := NewAuroraPane(a.Conn)
 
 	// Export our pane over TCP
-	a.led = remote.NewTCPMatrix(pane, fmt.Sprintf("%s:%d", "192.168.1.50", 3115))
+	a.led = remote.NewTCPMatrix(pane, fmt.Sprintf("%s:%d", "localhost", 3115))
 
 	// TODO: try a second NewMatrix - see if we can swipe between them
 

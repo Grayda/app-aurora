@@ -24,6 +24,7 @@ To-Do
 - [ ] Colour code the values shown when you tap
 - [ ] Overlay the Kp on the gauge
 - [ ] Perhaps investigate scrolling to allow larger data (e.g. speed) to be accurately displayed.
+- [ ] Add in moonrise / moonset to work out if it's worth heading out
 
 Helping out
 ===========
