@@ -32,6 +32,7 @@ func (a *App) Start(cfg *RuntimeConfig) error {
 	a.textData = "OK!"
 	fmt.Println("Making new pane...")
 	// The pane must implement the remote.pane interface
+
 	pane := NewAuroraPane(a.Conn)
 
 	// Export our pane over TCP

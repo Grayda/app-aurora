@@ -20,7 +20,7 @@ Usage is simple. Swipe to the new pane to see the gauge. Green = no activity, re
 To-Do
 =====
 
-- [ ] Change the Kp gauge to a score gauge. Kp can be a poor indicator of aurora activity
+- [x] Change the Kp gauge to a score gauge. Kp can be a poor indicator of aurora activity
 - [ ] Colour code the values shown when you tap
 - [ ] Overlay the Kp on the gauge
 - [ ] Perhaps investigate scrolling to allow larger data (e.g. speed) to be accurately displayed.

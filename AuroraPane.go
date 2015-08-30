@@ -17,19 +17,15 @@ import (
 type AuroraPane struct {
 	siteModel   *ninja.ServiceClient
 	site        *model.Site
-	getWeather  *time.Timer
 	dataTimeout *time.Timer
-
-	bz      bool
-	speed   bool
-	density bool
-	kp      bool
-
-	image util.Image
+	loaded      bool
+	image       util.Image
 }
 
-var current int = 0
+var current int = -1
+
 var results, resultsKp map[int]map[string]float64
+var score map[string]int
 
 func NewAuroraPane(conn *ninja.Connection) *AuroraPane {
 
@@ -38,31 +34,34 @@ func NewAuroraPane(conn *ninja.Connection) *AuroraPane {
 		image:     util.LoadImage("images/loading.gif"),
 	}
 
-	pane.dataTimeout = time.AfterFunc(0, func() {
-		pane.bz = false
-		pane.kp = false
-		pane.density = false
-		pane.speed = false
-		current = 0
-	})
-
 	go func() {
 		for {
+			fmt.Println("Loading results..")
 			results = aurora.Get()
+			fmt.Println("Loading Kp results..")
 			resultsKp = aurora.GetKp()
+			fmt.Println("Calculating score..")
+			score := aurora.Check(results, resultsKp, 0)
+			fmt.Println(score["Score"])
+			pane.loaded = true
 			switch {
-			case resultsKp[0]["Kp"] < 5:
+			case score["Score"] < 25:
 				pane.image = util.LoadImage("images/green.gif")
-			case resultsKp[0]["Kp"] >= 5 && resultsKp[0]["Kp"] <= 7:
+			case score["Score"] >= 25 && score["Score"] <= 50:
+				pane.image = util.LoadImage("images/yellow.gif")
+			case score["Score"] > 50 && score["Score"] <= 75:
 				pane.image = util.LoadImage("images/orange.gif")
-			case resultsKp[0]["Kp"] > 7:
+			case score["Score"] > 75:
 				pane.image = util.LoadImage("images/red.gif")
-
 			}
 
 			time.Sleep(time.Minute)
 		}
 	}()
+
+	pane.dataTimeout = time.AfterFunc(0, func() {
+		current = -1
+	})
 
 	return pane
 }
@@ -76,32 +75,9 @@ func (p *AuroraPane) KeepAwake() bool {
 }
 
 func (p *AuroraPane) Gesture(gesture *gestic.GestureMessage) {
-	if gesture.Tap.Active() {
-
-		switch current {
-		case 0:
-			p.kp = true
-			p.bz = false
-			p.speed = false
-			p.density = false
-			current++
-		case 1:
-			p.kp = false
-			p.bz = true
-			p.speed = false
-			p.density = false
-			current++
-		case 2:
-			p.kp = false
-			p.bz = false
-			p.speed = true
-			p.density = false
-			current++
-		case 3:
-			p.kp = false
-			p.bz = false
-			p.speed = false
-			p.density = true
+	if gesture.Tap.Active() && p.loaded == true {
+		current++
+		if current == 5 {
 			current = 0
 		}
 
@@ -111,29 +87,43 @@ func (p *AuroraPane) Gesture(gesture *gestic.GestureMessage) {
 }
 
 func (p *AuroraPane) Render() (*image.RGBA, error) {
-	if p.bz || p.kp || p.density || p.speed {
+	if current > -1 {
 		img := image.NewRGBA(image.Rect(0, 0, 16, 16))
-
+		var colour color.RGBA
+		// score, bz, speed, density, kp
 		switch {
-		case p.kp == true:
-			drawText("K:", color.RGBA{253, 151, 32, 255}, 1, img)
-			drawText(fmt.Sprintf("%1.1f", resultsKp[0]["Kp"]), color.RGBA{253, 151, 32, 255}, 8, img)
-		case p.bz == true:
-			drawText("B:", color.RGBA{253, 151, 32, 255}, 1, img)
-			drawText(fmt.Sprintf("%2.1f", results[0]["Bz"]), color.RGBA{253, 151, 32, 255}, 8, img)
-		case p.speed == true:
-			drawText("S:", color.RGBA{253, 151, 32, 255}, 1, img)
-			drawText(fmt.Sprintf("%4.0f", results[0]["Speed"]), color.RGBA{253, 151, 32, 255}, 8, img)
-		case p.density == true:
-			drawText("D:", color.RGBA{253, 151, 32, 255}, 1, img)
-			drawText(fmt.Sprintf("%3.1f", results[0]["Density"]), color.RGBA{253, 151, 32, 255}, 8, img)
+		case score["Score"] == 0 || score["Bz"] == 0 || score["Speed"] == 0 || score["Density"] == 0 || score["Kp"] == 0:
+			colour = color.RGBA{0, 255, 0, 255}
+		case score["Score"] == 1 || score["Bz"] == 1 || score["Speed"] == 1 || score["Density"] == 1 || score["Kp"] == 1:
+			colour = color.RGBA{255, 255, 0, 255}
+		case score["Score"] == 2 || score["Bz"] == 2 || score["Speed"] == 2 || score["Density"] == 2 || score["Kp"] == 2:
+			colour = color.RGBA{255, 128, 0, 255}
+		case score["Score"] == 3 || score["Bz"] == 3 || score["Speed"] == 3 || score["Density"] == 3 || score["Kp"] == 3:
+			colour = color.RGBA{255, 0, 0, 255}
+
+		}
+
+		switch current {
+		case 0:
+			drawText("SC:", colour, 1, img)
+			drawText(fmt.Sprintf("%d", score["Score"]), colour, 8, img)
+		case 1:
+			drawText("KP:", colour, 1, img)
+			drawText(fmt.Sprintf("%1.1f", resultsKp[0]["Kp"]), colour, 8, img)
+		case 2:
+			drawText("BZ:", colour, 1, img)
+			drawText(fmt.Sprintf("%2.1f", results[0]["Bz"]), colour, 8, img)
+		case 3:
+			drawText("SP:", colour, 1, img)
+			drawText(fmt.Sprintf("%f", results[0]["Speed"]), colour, 8, img)
+		case 4:
+			drawText("DN:", colour, 1, img)
+			drawText(fmt.Sprintf("%3.1f", results[0]["Density"]), colour, 8, img)
 
 		}
 		return img, nil
 
 	} else {
-
-		drawText(fmt.Sprintf("%1.f", resultsKp[0]["Kp"]), color.RGBA{253, 151, 32, 255}, 1, image.NewRGBA(image.Rect(0, 0, 16, 16)))
 		return p.image.GetNextFrame(), nil
 	}
 }
