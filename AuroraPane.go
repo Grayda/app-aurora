@@ -41,7 +41,7 @@ func NewAuroraPane(conn *ninja.Connection) *AuroraPane {
 			fmt.Println("Loading Kp results..")
 			resultsKp = aurora.GetKp()
 			fmt.Println("Calculating score..")
-			score := aurora.Check(results, resultsKp, 0)
+			score = aurora.Check(results, resultsKp, 0)
 			fmt.Println(score["Score"])
 			pane.loaded = true
 			switch {
@@ -89,36 +89,24 @@ func (p *AuroraPane) Gesture(gesture *gestic.GestureMessage) {
 func (p *AuroraPane) Render() (*image.RGBA, error) {
 	if current > -1 {
 		img := image.NewRGBA(image.Rect(0, 0, 16, 16))
-		var colour color.RGBA
-		// score, bz, speed, density, kp
-		switch {
-		case score["Score"] == 0 || score["Bz"] == 0 || score["Speed"] == 0 || score["Density"] == 0 || score["Kp"] == 0:
-			colour = color.RGBA{0, 255, 0, 255}
-		case score["Score"] == 1 || score["Bz"] == 1 || score["Speed"] == 1 || score["Density"] == 1 || score["Kp"] == 1:
-			colour = color.RGBA{255, 255, 0, 255}
-		case score["Score"] == 2 || score["Bz"] == 2 || score["Speed"] == 2 || score["Density"] == 2 || score["Kp"] == 2:
-			colour = color.RGBA{255, 128, 0, 255}
-		case score["Score"] == 3 || score["Bz"] == 3 || score["Speed"] == 3 || score["Density"] == 3 || score["Kp"] == 3:
-			colour = color.RGBA{255, 0, 0, 255}
-
-		}
 
 		switch current {
 		case 0:
-			drawText("SC:", colour, 1, img)
-			drawText(fmt.Sprintf("%d", score["Score"]), colour, 8, img)
+			drawText("SC:", color.RGBA{255, 255, 255, 255}, 1, img)
+			fmt.Println(score["Score"])
+			drawText(fmt.Sprintf("%d", score["Score"]), getColour(score["Score"]), 8, img)
 		case 1:
-			drawText("KP:", colour, 1, img)
-			drawText(fmt.Sprintf("%1.1f", resultsKp[0]["Kp"]), colour, 8, img)
+			drawText("KP:", color.RGBA{255, 255, 255, 255}, 1, img)
+			drawText(fmt.Sprintf("%.2f", resultsKp[0]["Kp"]), getColour(score["Kp"]), 8, img)
 		case 2:
-			drawText("BZ:", colour, 1, img)
-			drawText(fmt.Sprintf("%2.1f", results[0]["Bz"]), colour, 8, img)
+			drawText("BZ:", color.RGBA{255, 255, 255, 255}, 1, img)
+			drawText(fmt.Sprintf("%2.1f", results[0]["Bz"]), getColour(score["Bz"]), 8, img)
 		case 3:
-			drawText("SP:", colour, 1, img)
-			drawText(fmt.Sprintf("%f", results[0]["Speed"]), colour, 8, img)
+			drawText("SP:", color.RGBA{255, 255, 255, 255}, 1, img)
+			drawText(fmt.Sprintf("%.f", results[0]["Speed"]), getColour(score["Speed"]), 8, img)
 		case 4:
-			drawText("DN:", colour, 1, img)
-			drawText(fmt.Sprintf("%3.1f", results[0]["Density"]), colour, 8, img)
+			drawText("DN:", color.RGBA{255, 255, 255, 255}, 1, img)
+			drawText(fmt.Sprintf("%3.1f", results[0]["Density"]), getColour(score["Density"]), 8, img)
 
 		}
 		return img, nil
@@ -138,4 +126,20 @@ func drawText(text string, col color.RGBA, top int, img *image.RGBA) {
 	start := int(16 - width - 1)
 
 	O4b03b.Font.DrawString(img, start, top, text, col)
+}
+
+func getColour(metric int) color.RGBA {
+	switch metric {
+	case 0:
+		return color.RGBA{0, 255, 0, 255}
+	case 1:
+		return color.RGBA{255, 255, 0, 255}
+	case 2:
+		return color.RGBA{255, 128, 0, 255}
+	case 3:
+		return color.RGBA{255, 0, 0, 255}
+	default:
+		return color.RGBA{0, 0, 255, 255}
+	}
+	return color.RGBA{255, 255, 255, 255}
 }

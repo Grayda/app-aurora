@@ -11,5 +11,5 @@
   "license": "MIT",
   "topics": {},
   "maxMemory": 10,
-  "files": ["app-aurora"]
+  "files": ["app-aurora", "package.json", "images/"]
 }
